@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Comparativo - Vendas e Promoções</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section h2 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+        
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .kpi-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .kpi-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .kpi-change {
+            font-size: 0.9em;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .positive {
+            color: #4CAF50;
+        }
+        
+        .negative {
+            color: #f44336;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 50px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .comparison-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .comparison-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .comparison-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        .highlight-up {
+            background: #c8e6c9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .highlight-down {
+            background: #ffcdd2;
+            color: #c62828;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .insights {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .insights h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        
+        .insights ul {
+            margin-left: 20px;
+            color: #333;
+        }
+        
+        .insights li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .period-label {
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+        
+        footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Relatório Comparativo de Vendas e Promoções</h1>
+            <p>Análise detalhada dos períodos: Julho (14, 21, 28) vs Agosto (11, 18, 25)</p>
+        </header>
+        
+        <div class="content">
+            <!-- RESUMO EXECUTIVO -->
+            <div class="section">
+                <h2>🎯 Resumo Executivo - KPIs Principais</h2>
+                
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Quantidade Total (Julho)</div>
+                        <div class="kpi-value">50.281</div>
+                        <div class="kpi-change">unidades</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Quantidade Total (Agosto)</div>
+                        <div class="kpi-value">74.486</div>
+                        <div class="kpi-change">unidades</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Variação de Quantidade</div>
+                        <div class="kpi-value positive">+48%</div>
+                        <div class="kpi-change">CRESCIMENTO FORTE ⬆️</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Valor Total Vendas (Julho)</div>
+                        <div class="kpi-value">R$ 367.503</div>
+                        <div class="kpi-change">mil</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Valor Total Vendas (Agosto)</div>
+                        <div class="kpi-value">R$ 431.629</div>
+                        <div class="kpi-change">mil</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Variação de Vendas</div>
+                        <div class="kpi-value positive">+17.4%</div>
+                        <div class="kpi-change">CRESCIMENTO POSITIVO ⬆️</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Margem (Julho)</div>
+                        <div class="kpi-value">31.17%</div>
+                        <div class="kpi-change">percentual</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Margem (Agosto)</div>
+                        <div class="kpi-value">20.07%</div>
+                        <div class="kpi-change">percentual</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Variação de Margem</div>
+                        <div class="kpi-value negative">-35.5%</div>
+                        <div class="kpi-change">QUEDA SIGNIFICATIVA ⬇️</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Lucro Total (Julho)</div>
+                        <div class="kpi-value">R$ 114.550</div>
+                        <div class="kpi-change">mil</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Lucro Total (Agosto)</div>
+                        <div class="kpi-value">R$ 86.620</div>
+                        <div class="kpi-change">mil</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Variação de Lucro</div>
+                        <div class="kpi-value negative">-24.4%</div>
+                        <div class="kpi-change">REDUÇÃO CRÍTICA ⬇️</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- INSIGHTS PRINCIPAIS -->
+            <div class="section">
+                <h2>💡 Insights Principais</h2>
+                
+                <div class="insights">
+                    <h3>⬆️ Pontos Positivos</h3>
+                    <ul>
+                        <li><strong>Crescimento de Vendas em Volume:</strong> 48% de aumento em quantidade vendida (50.281 → 74.486 unidades)</li>
+                        <li><strong>Aumento em Receita:</strong> +17.4% em valor total de vendas (R$ 367.503 → R$ 431.629 mil)</li>
+                        <li><strong>Maior Número de Transações:</strong> Aumento de documentos e itens processados</li>
+                        <li><strong>Atividades Promocionais:</strong> Aumento significativo em promoções (R$ 104.757 → R$ 146.230 mil)</li>
+                    </ul>
+                </div>
+                
+                <div class="insights" style="background: #fce4ec; border-left-color: #c2185b;">
+                    <h3 style="color: #c2185b;">⬇️ Pontos de Atenção</h3>
+                    <ul>
+                        <li><strong>Redução Crítica de Margem:</strong> Queda de 35.5% (31.17% → 20.07%) - impacto direto das promoções</li>
+                        <li><strong>Queda Significativa de Lucro:</strong> -24.4% em lucro total (R$ 114.550 → R$ 86.620 mil)</li>
+                        <li><strong>Custo Unitário Reduzido:</strong> Preço médio caiu 27% (R$ 7,31 → R$ 5,38)</li>
+                        <li><strong>Pressão de Custos:</strong> Apesar de custos absolutos aumentarem, lucratividade diminuiu</li>
+                        <li><strong>Erosão de Valor:</strong> Aumento de quantidade não compensou a margem perdida</li>
+                    </ul>
+                </div>
+                
+                <div class="insights" style="background: #fff3e0; border-left-color: #f57c00;">
+                    <h3 style="color: #f57c00;">🎯 Recomendações Estratégicas</h3>
+                    <ul>
+                        <li>Revisar estratégia de precificação e promoções para melhor equilíbrio volume/margem</li>
+                        <li>Implementar promoções seletivas por categoria/cliente ao invés de descontos generalizados</li>
+                        <li>Focar em produtos de maior margem dentro das promoções</li>
+                        <li>Analisar elasticidade de demanda para otimizar descontos</li>
+                        <li>Estabelecer metas de margem mínima para futuras campanhas</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- COMPARAÇÃO VISUAL -->
+            <div class="section">
+                <h2>📈 Evolução dos KPIs Principais</h2>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Evolução Quantidade Total por Semana</div>
+                    <canvas id="quantidadeChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Evolução Valor Total de Vendas por Semana</div>
+                    <canvas id="vendaChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Evolução Margem (%) por Semana</div>
+                    <canvas id="margemChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Evolução Lucro Total por Semana</div>
+                    <canvas id="lucroChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- ANÁLISE COMPARATIVA DETALHADA -->
+            <div class="section">
+                <h2>📊 Análise Comparativa Detalhada</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Julho</th>
+                            <th>Agosto</th>
+                            <th>Variação</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Quantidade Total</strong></td>
+                            <td>50.281 un</td>
+                            <td>74.486 un</td>
+                            <td>+24.205 un</td>
+                            <td><span class="highlight-up">+48.0%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valor Total Vendas</strong></td>
+                            <td>R$ 367.503 mil</td>
+                            <td>R$ 431.629 mil</td>
+                            <td>+R$ 64.126 mil</td>
+                            <td><span class="highlight-up">+17.4%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Preço Médio Unitário</strong></td>
+                            <td>R$ 7,31</td>
+                            <td>R$ 5,38</td>
+                            <td>-R$ 1,93</td>
+                            <td><span class="highlight-down">-26.4%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Margem (%)</strong></td>
+                            <td>31.17%</td>
+                            <td>20.07%</td>
+                            <td>-11.1 pp</td>
+                            <td><span class="highlight-down">-35.5%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lucro Total</strong></td>
+                            <td>R$ 114.550 mil</td>
+                            <td>R$ 86.620 mil</td>
+                            <td>-R$ 27.930 mil</td>
+                            <td><span class="highlight-down">-24.4%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Promoções (Valor)</strong></td>
+                            <td>R$ 104.757 mil</td>
+                            <td>R$ 146.230 mil</td>
+                            <td>+R$ 41.473 mil</td>
+                            <td><span class="highlight-up">+39.5%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>% Promoções/Vendas</strong></td>
+                            <td>28.50%</td>
+                            <td>33.88%</td>
+                            <td>+5.38 pp</td>
+                            <td><span class="highlight-down">+18.9%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nº de Documentos</strong></td>
+                            <td>17.573</td>
+                            <td>20.830</td>
+                            <td>+3.257</td>
+                            <td><span class="highlight-up">+18.5%</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custo Bruto Total</strong></td>
+                            <td>R$ 250.599 mil</td>
+                            <td>R$ 342.477 mil</td>
+                            <td>+R$ 91.878 mil</td>
+                            <td><span class="highlight-down">+36.7%</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- ANÁLISE POR COMPONENTE -->
+            <div class="section">
+                <h2>🔍 Análise de Componentes</h2>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Comparação: Venda, Promoção e Lucro (Julho vs Agosto)</div>
+                    <canvas id="componentChart"></canvas>
+                </div>
+                
+                <div class="insights">
+                    <h3>Decomposição do Impacto de Promoções</h3>
+                    <ul>
+                        <li><strong>Crescimento de Promoções:</strong> +39.5% (R$ 104.757 → R$ 146.230 mil)</li>
+                        <li><strong>Participação em Vendas:</strong> Aumentou de 28.5% para 33.88% - 18.9% maior desconto relativo</li>
+                        <li><strong>Trade-off Identificado:</strong> Ganho de volume (+48% quantidade) não compensou a queda de margem (-35.5%)</li>
+                        <li><strong>Custo de Aquisição:</strong> Custos aumentaram 36.7% enquanto lucro caiu 24.4%</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- GRÁFICO COMPARATIVO PERÍODO -->
+            <div class="section">
+                <h2>📅 Evolução Semanal Detalhada</h2>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Série Temporal - KPIs Principais (3 semanas cada período)</div>
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- CONCLUSÕES -->
+            <div class="section">
+                <h2>✅ Conclusões</h2>
+                
+                <div class="insights" style="background: #f3e5f5; border-left-color: #7b1fa2;">
+                    <h3 style="color: #7b1fa2;">Situação Atual</h3>
+                    <p style="margin: 10px 0; line-height: 1.8;">
+                        O período de agosto apresentou um cenário paradoxal: enquanto houve crescimento expressivo em volume de vendas (+48%) e receita bruta (+17.4%), 
+                        a lucratividade caiu significativamente (-24.4%). Este é um indicador de que a estratégia promocional adotada, embora tenha impulsionado vendas, 
+                        comprometeu severamente a rentabilidade do negócio.
+                    </p>
+                </div>
+                
+                <div class="insights" style="background: #fbe9e7; border-left-color: #d84315;">
+                    <h3 style="color: #d84315;">Problemas Identificados</h3>
+                    <ul>
+                        <li>Margens de lucro reduzidas para níveis críticos (20% em agosto vs 31% em julho)</li>
+                        <li>Desconto médio por unidade muito agressivo (-26.4% em preço unitário)</li>
+                        <li>Promoções tomaram 33.88% da receita em agosto, reduzindo lucro operacional</li>
+                        <li>Sustentabilidade questionada - não há margem para custos adicionais ou flutuações</li>
+                    </ul>
+                </div>
+                
+                <div class="insights" style="background: #e8f5e9; border-left-color: #2e7d32;">
+                    <h3 style="color: #2e7d32;">Próximos Passos Recomendados</h3>
+                    <ul>
+                        <li>1️⃣ <strong>Revisar Estratégia de Promoções:</strong> Implementar limite de 15-20% máximo de participação em vendas</li>
+                        <li>2️⃣ <strong>Segmentação de Clientes:</strong> Aplicar promoções seletivas para clientes com melhor potencial de margem</li>
+                        <li>3️⃣ <strong>Mix de Produtos:</strong> Priorizar promoção de itens com maior margem absoluta</li>
+                        <li>4️⃣ <strong>Modelagem de Elasticidade:</strong> Testar diferentes níveis de desconto para otimizar volume vs margem</li>
+                        <li>5️⃣ <strong>Monitoramento Semanal:</strong> Acompanhar KPIs de margem e lucro com frequência maior</li>
+                        <li>6️⃣ <strong>Meta de Rentabilidade:</strong> Estabelecer piso de margem mínima de 28% para futuras campanhas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>📊 Relatório Comparativo Automático | Período: Julho (14, 21, 28) vs Agosto (11, 18, 25)</p>
+            <p>Gerado em: <span id="dataAtual"></span> | Versão 1.0</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Data atual
+        document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Configuração global de gráficos
+        Chart.register(ChartDataLabels);
+        
+        // Dados dos períodos
+        const dadosJulho = {
+            semana1: { data: '14/07', qtd: 49690.657, venda: 366806.03, margem: 29.71, lucro: 108984.18 },
+            semana2: { data: '21/07', qtd: 50281.386, venda: 367503.37, margem: 31.17, lucro: 114550.53 },
+            semana3: { data: '28/07', qtd: 51951.278, venda: 344798.37, margem: 27.90, lucro: 96211.97 }
+        };
+        
+        const dadosAgosto = {
+            semana1: { data: '11/08', qtd: 74485.766, venda: 400692.20, margem: 25.04, lucro: 100342.37 },
+            semana2: { data: '18/08', qtd: 90064.891, venda: 431628.75, margem: 20.07, lucro: 86619.73 },
+            semana3: { data: '25/08', qtd: 51951.278, venda: 344798.37, margem: 27.90, lucro: 96211.97 }
+        };
+        
+        // Gráfico 1: Quantidade
+        new Chart(document.getElementById('quantidadeChart'), {
+            type: 'line',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3'],
+                datasets: [
+                    {
+                        label: 'Julho',
+                        data: [49690.657, 50281.386, 51951.278],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Agosto',
+                        data: [74485.766, 90064.891, 51951.278],
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f44336',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: (value) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico 2: Vendas
+        new Chart(document.getElementById('vendaChart'), {
+            type: 'line',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3'],
+                datasets: [
+                    {
+                        label: 'Julho',
+                        data: [366806.03, 367503.37, 344798.37],
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#4CAF50',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Agosto',
+                        data: [400692.20, 431628.75, 344798.37],
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#2196F3',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: (value) => 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k'
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico 3: Margem
+        new Chart(document.getElementById('margemChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3'],
+                datasets: [
+                    {
+                        label: 'Julho (%)',
+                        data: [29.71, 31.17, 27.90],
+                        backgroundColor: '#667eea',
+                        borderRadius: 5
+                    },
+                    {
+                        label: 'Agosto (%)',
+                        data: [25.04, 20.07, 27.90],
+                        backgroundColor: '#f44336',
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: (value) => value.toFixed(2) + '%'
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico 4: Lucro
+        new Chart(document.getElementById('lucroChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3'],
+                datasets: [
+                    {
+                        label: 'Julho (mil)',
+                        data: [108984.18, 114550.53, 96211.97],
+                        backgroundColor: '#4CAF50',
+                        borderRadius: 5
+                    },
+                    {
+                        label: 'Agosto (mil)',
+                        data: [100342.37, 86619.73, 96211.97],
+                        backgroundColor: '#FF9800',
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: (value) => 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k'
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico 5: Componentes
+        new Chart(document.getElementById('componentChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Venda Total', 'Promoções', 'Lucro'],
+                datasets: [
+                    {
+                        label: 'Julho (mil)',
+                        data: [367503.37, 104756.51, 114550.53],
+                        backgroundColor: ['#667eea', '#9c27b0', '#4CAF50'],
+                        borderRadius: 5
+                    },
+                    {
+                        label: 'Agosto (mil)',
+                        data: [431628.75, 146230.09, 86619.73],
+                        backgroundColor: ['#2196F3', '#e91e63', '#FF9800'],
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: (value) => 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k'
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + (value/1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico 6: Série Temporal
+        new Chart(document.getElementById('timeSeriesChart'), {
+            type: 'line',
+            data: {
+                labels: ['14/07', '21/07', '28/07', '11/08', '18/08', '25/08'],
+                datasets: [
+                    {
+                        label: 'Margem (%)',
+                        data: [29.71, 31.17, 27.90, 25.04, 20.07, 27.90],
+                        borderColor: '#f44336',
+                        borderWidth: 3,
+                        yAxisID: 'y',
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#f44336'
+                    },
+                    {
+                        label: 'Lucro (÷10 mil)',
+                        data: [10.8984, 11.4551, 9.6212, 10.0342, 8.6620, 9.6212],
+                        borderColor: '#4CAF50',
+                        borderWidth: 3,
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#4CAF50'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Margem (%)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Lucro (÷10 mil R$)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
